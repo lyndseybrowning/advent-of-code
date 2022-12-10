@@ -6,30 +6,38 @@ interface Directory {
   children: Directory[];
 }
 
-function solvePuzzle1(fileSystem: Directory[]) {
-  const MAX_SIZE = 100000;
+function calculateDirectorySize(directory: Directory) {
+  const sizes: number[] = [];
 
-  const calculateDirectorySize = (directory: Directory, sizes: number[]) => {
+  const findSize = (directory: Directory) => {
     let size = directory.files;
 
     directory.children.forEach((child) => {
-      size += calculateDirectorySize(child, sizes);
+      size += findSize(child);
     });
 
-    if (size < MAX_SIZE) {
-      sizes.push(size);
-    }
+    sizes.push(size);
 
     return size;
   };
 
+  findSize(directory);
+
+  return sizes;
+}
+
+function solvePuzzle1(fileSystem: Directory[]) {
+  const MAX_SIZE = 100000;
+
   const totalFileSizes = fileSystem.reduce((fileSizes, directory) => {
-    const directorySizes: number[] = [];
-    calculateDirectorySize(directory, directorySizes);
-    return fileSizes + directorySizes.reduce((total, size) => total + size, 0);
+    const fileSize = calculateDirectorySize(directory).filter(
+      (size) => size < MAX_SIZE
+    );
+
+    return fileSizes + fileSize.reduce((total, file) => total + file, 0);
   }, 0);
 
-  // 1443806 / 95437
+  // 1443806
   return totalFileSizes;
 }
 
@@ -40,25 +48,16 @@ function solvePuzzle2(fileSystem: Directory[], totalFiles: number) {
   const usedSpace = MAX_DISK_SIZE - totalFiles;
   const minSpaceRequired = MIN_SPACE_REQUIRED - usedSpace;
 
-  const calculateDirectorySize = (directory: Directory) => {
-    let size = directory.files;
-
-    directory.children.forEach((child) => {
-      size += calculateDirectorySize(child);
-    });
-
-    return size;
-  };
-
-  const fileSizes: number[] = fileSystem
-    .reduce((directorySizes: number[], dir: Directory) => {
-      directorySizes.push(calculateDirectorySize(dir));
-      return directorySizes;
+  const fileSizes = fileSystem
+    .reduce((fileSizes: number[], directory: Directory) => {
+      const directorySizes = calculateDirectorySize(directory);
+      return [...fileSizes, ...directorySizes];
     }, [])
     .sort((a, b) => a - b);
 
   const itemToDelete = fileSizes.find((file) => file >= minSpaceRequired);
 
+  // 942298
   return itemToDelete;
 }
 
@@ -135,7 +134,7 @@ function buildFileSystem(entries: string[]) {
   return { fileSystem, totalFilesInRoot };
 }
 
-const file: string = fs.readFileSync("./2022/day7/input.txt", "utf8");
+const file: string = fs.readFileSync("./src/day7/input.txt", "utf8");
 const entries = file.split("\n");
 const { fileSystem, totalFilesInRoot } = buildFileSystem(entries);
 
