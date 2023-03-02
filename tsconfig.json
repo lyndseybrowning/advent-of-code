@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "module":"CommonJS",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "target": "ESNext",
+    "esModuleInterop": true
+  }
+}
